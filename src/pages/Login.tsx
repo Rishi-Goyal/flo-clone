@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Droplets } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { authRedirectUrl, supabase } from '../lib/supabase'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -15,7 +15,7 @@ export function Login() {
     setError(null)
     const { error: err } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: authRedirectUrl() },
     })
     setBusy(false)
     if (err) setError(err.message)
@@ -48,9 +48,8 @@ export function Login() {
         <div className="mt-8 w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-sm">
           <p className="text-sm font-semibold">Check your email 💌</p>
           <p className="mt-1.5 text-xs leading-relaxed text-plum-soft">
-            We sent a sign-in link and a 6-digit code to{' '}
-            <span className="font-medium text-plum">{email}</span>. Open the link on this device, or
-            enter the code below.
+            We sent a sign-in link to <span className="font-medium text-plum">{email}</span>. Open it
+            on this device to continue. Got a 6-digit code instead? Enter it below.
           </p>
           <form onSubmit={verifyCode} className="mt-3 space-y-2">
             <input
