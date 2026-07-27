@@ -61,3 +61,16 @@ for (const [file, size] of [['pwa-192.png', 192], ['pwa-512.png', 512], ['apple-
   writeFileSync(new URL(`../public/${file}`, import.meta.url), png(size, pixel))
   console.log('wrote public/' + file)
 }
+
+// Source images for @capacitor/assets (native Android icons/splash)
+import { mkdirSync } from 'node:fs'
+mkdirSync(new URL('../assets', import.meta.url), { recursive: true })
+writeFileSync(new URL('../assets/logo.png', import.meta.url), png(1024, pixel))
+// foreground keeps the droplet centred in the adaptive-icon safe zone (inner ~66%)
+const inset = (u) => (u - 0.5) / 0.62 + 0.5
+writeFileSync(
+  new URL('../assets/icon-foreground.png', import.meta.url),
+  png(1024, (u, v) => pixel(inset(u), inset(v))),
+)
+writeFileSync(new URL('../assets/icon-background.png', import.meta.url), png(1024, () => ROSE))
+console.log('wrote assets/logo.png, icon-foreground.png, icon-background.png')

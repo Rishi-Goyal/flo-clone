@@ -69,6 +69,29 @@ To preview the calendar/insights with ~6 months of realistic data:
 2. Add `SUPABASE_SERVICE_ROLE_KEY` (Project Settings → API) and `SEED_EMAIL` to `.env.local`.
 3. `npm run seed`
 
+## Android app
+
+The repo doubles as a native Android app via [Capacitor](https://capacitorjs.com) (`android/`).
+
+**Get an APK without installing anything:** every push to GitHub runs the *Android APK* workflow,
+which builds `bloom-debug-apk` as a downloadable artifact (Actions tab → latest run → Artifacts).
+Download it on the phone and install (allow "install unknown apps" when prompted).
+
+**Sign-in on Android:** magic links open in the phone's browser, not the app — so the login screen
+also accepts the **6-digit code** included in the sign-in email. Enter email → "Send sign-in link" →
+type the code from the email.
+
+**Local build** (only if you have Android Studio / an Android SDK):
+
+```bash
+npm run build
+npx cap sync android
+cd android && ./gradlew assembleDebug   # → android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Client config for these builds comes from `.env.production` (public URL + publishable key — safe to
+commit; everything is enforced by RLS).
+
 ## Development
 
 ```bash
