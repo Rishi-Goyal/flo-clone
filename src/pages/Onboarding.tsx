@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { HeartHandshake, Droplets } from 'lucide-react'
+import { MSymbol } from '../components/TrackerIcon'
 import { useAuth } from '../hooks/useAuth'
 import { seedTrackerAccount } from '../hooks/useData'
 import { supabase, todayIso } from '../lib/supabase'
@@ -75,7 +75,7 @@ export function Onboarding() {
             className="flex w-full items-center gap-4 rounded-2xl bg-white p-5 text-left shadow-sm transition-transform active:scale-[0.98]"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blush">
-              <Droplets size={22} className="text-rose" />
+              <MSymbol name="water_drop" size={24} fill color="#E4557F" />
             </span>
             <span>
               <span className="block text-sm font-semibold">I track my cycle</span>
@@ -88,7 +88,7 @@ export function Onboarding() {
             className="flex w-full items-center gap-4 rounded-2xl bg-white p-5 text-left shadow-sm transition-transform active:scale-[0.98]"
           >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-fertile-soft">
-              <HeartHandshake size={22} className="text-fertile" />
+              <MSymbol name="favorite" size={24} fill color="#6FB5A2" />
             </span>
             <span>
               <span className="block text-sm font-semibold">I'm the partner</span>

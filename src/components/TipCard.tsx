@@ -1,12 +1,12 @@
-import { Lightbulb } from 'lucide-react'
+import { MSymbol } from './TrackerIcon'
 
-export function TipCard({ tip, title = 'Tip of the day' }: { tip: string; title?: string }) {
+export function TipCard({ tip, title = "Today's nudge" }: { tip: string; title?: string }) {
   return (
-    <div className="flex gap-3 rounded-2xl bg-peach-soft p-4">
-      <Lightbulb size={20} className="mt-0.5 shrink-0 text-peach" fill="#F7A98C" />
+    <div className="flex gap-3.5 rounded-3xl border border-line bg-white p-5">
+      <MSymbol name="wb_twilight" size={22} color="#E08A6A" className="mt-0.5 shrink-0" />
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-plum-soft">{title}</p>
-        <p className="mt-0.5 text-sm leading-relaxed">{tip}</p>
+        <p className="text-[13px] font-semibold uppercase tracking-[.03em] text-plum-soft">{title}</p>
+        <p className="mt-1 text-[15px] leading-relaxed">{tip}</p>
       </div>
     </div>
   )

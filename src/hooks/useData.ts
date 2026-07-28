@@ -9,6 +9,7 @@ import type {
   LogEntry,
   LogValue,
   PartnerLink,
+  PartnerNote,
   Reminder,
   Tracker,
   TrackerCategory,
@@ -146,6 +147,69 @@ export function useReminders(userId: string | undefined) {
       return data as Reminder[]
     },
   })
+}
+
+/** Display name of another (linked) profile — RLS only exposes linked profiles. */
+export function useLinkedProfileName(profileId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['profile-name', profileId],
+    enabled: !!profileId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', profileId!)
+        .maybeSingle()
+      return (data?.display_name as string) ?? null
+    },
+  })
+}
+
+export function useUnreadNotes(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['notes-unread', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('partner_notes')
+        .select('*')
+        .eq('recipient_id', userId!)
+        .is('read_at', null)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data as PartnerNote[]
+    },
+  })
+}
+
+export function useSendNote() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      linkId,
+      senderId,
+      recipientId,
+      body,
+    }: {
+      linkId: string
+      senderId: string
+      recipientId: string
+      body: string
+    }) => {
+      const { error } = await supabase.from('partner_notes').insert({
+        link_id: linkId,
+        sender_id: senderId,
+        recipient_id: recipientId,
+        body: body.trim(),
+      })
+      if (error) throw error
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['notes-unread'] }),
+  })
+}
+
+export async function markNoteRead(noteId: string): Promise<void> {
+  await supabase.from('partner_notes').update({ read_at: new Date().toISOString() }).eq('id', noteId)
 }
 
 // ------------------------------------------------------------ cycle stats recompute

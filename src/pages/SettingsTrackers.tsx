@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ChevronUp, Eye, EyeOff, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useCategories, useTrackers } from '../hooks/useData'
 import { supabase } from '../lib/supabase'
 import { TRACKER_COLORS, TRACKER_ICONS } from '../lib/defaults'
 import { PageHeader } from '../components/PageHeader'
-import { TrackerIcon } from '../components/TrackerIcon'
+import { MSymbol, TrackerIcon } from '../components/TrackerIcon'
 import type { ChoiceOption, InputType, Tracker, TrackerCategory } from '../lib/types'
 
 export function SettingsTrackers() {
@@ -94,9 +93,9 @@ export function SettingsTrackers() {
                 <button
                   type="button"
                   onClick={() => void renameCategory(cat)}
-                  className="text-xs font-bold uppercase tracking-wide text-plum-soft"
+                  className="text-[13px] font-bold uppercase tracking-[.06em] text-plum-soft"
                 >
-                  {cat.name} <Pencil size={10} className="ml-0.5 inline" />
+                  {cat.name} <MSymbol name="edit" size={12} className="ml-0.5 align-middle" />
                 </button>
                 <button
                   type="button"
@@ -104,14 +103,14 @@ export function SettingsTrackers() {
                   className="p-1 text-plum-soft/60"
                   aria-label={`Delete category ${cat.name}`}
                 >
-                  <Trash2 size={13} />
+                  <MSymbol name="delete" size={15} />
                 </button>
               </div>
-              <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+              <div className="overflow-hidden rounded-[24px] border border-line bg-white">
                 {list.map((t, i) => (
                   <div
                     key={t.id}
-                    className={`flex items-center gap-2.5 p-3.5 ${i > 0 ? 'border-t border-blush' : ''} ${
+                    className={`flex items-center gap-2.5 p-3.5 ${i > 0 ? 'border-t border-line-soft' : ''} ${
                       t.is_active ? '' : 'opacity-45'
                     }`}
                   >
@@ -130,20 +129,20 @@ export function SettingsTrackers() {
                     </div>
                     <div className="flex items-center">
                       <IconBtn label="Move up" onClick={() => void moveTracker(t, -1)}>
-                        <ChevronUp size={15} />
+                        <MSymbol name="keyboard_arrow_up" size={18} />
                       </IconBtn>
                       <IconBtn label="Move down" onClick={() => void moveTracker(t, 1)}>
-                        <ChevronDown size={15} />
+                        <MSymbol name="keyboard_arrow_down" size={18} />
                       </IconBtn>
                       <IconBtn label={t.is_active ? 'Hide' : 'Show'} onClick={() => void toggleActive(t)}>
-                        {t.is_active ? <Eye size={15} /> : <EyeOff size={15} />}
+                        <MSymbol name={t.is_active ? 'visibility' : 'visibility_off'} size={17} />
                       </IconBtn>
                       <IconBtn label="Edit" onClick={() => setEditing(t)}>
-                        <Pencil size={15} />
+                        <MSymbol name="edit" size={17} />
                       </IconBtn>
                       {t.system_key !== 'period_flow' && (
                         <IconBtn label="Delete" onClick={() => void removeTracker(t)}>
-                          <Trash2 size={15} />
+                          <MSymbol name="delete" size={17} />
                         </IconBtn>
                       )}
                     </div>
@@ -163,7 +162,7 @@ export function SettingsTrackers() {
         onClick={() => setEditing('new')}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-rose py-3 text-sm font-semibold text-white shadow-lg shadow-rose/30"
       >
-        <Plus size={16} /> New tracker
+        <MSymbol name="add" size={20} /> New tracker
       </button>
 
       {newCategoryFor ? (
@@ -185,7 +184,7 @@ export function SettingsTrackers() {
           onClick={() => setNewCategoryFor(true)}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-blush-deep py-2.5 text-xs font-semibold text-plum-soft"
         >
-          <Plus size={14} /> New category
+          <MSymbol name="add" size={16} /> New category
         </button>
       )}
 
@@ -297,7 +296,7 @@ function TrackerEditor({
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold">{tracker ? 'Edit tracker' : 'New tracker'}</h2>
           <button type="button" onClick={onClose} className="rounded-full p-2 text-plum-soft" aria-label="Close">
-            <X size={20} />
+            <MSymbol name="close" size={22} />
           </button>
         </div>
 
@@ -395,7 +394,7 @@ function TrackerEditor({
                     className="p-1 text-plum-soft"
                     aria-label={`Remove ${o.label}`}
                   >
-                    <X size={14} />
+                    <MSymbol name="close" size={16} />
                   </button>
                 </div>
               ))}

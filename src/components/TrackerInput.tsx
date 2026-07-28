@@ -18,15 +18,15 @@ export function TrackerInput({
   disabled?: boolean
 }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <div className="mb-2.5 flex items-center gap-2">
+    <div className="rounded-3xl border border-line bg-white p-5">
+      <div className="mb-3 flex items-center gap-2.5">
         <span
-          className="flex h-7 w-7 items-center justify-center rounded-full"
-          style={{ background: `${tracker.color}22` }}
+          className="flex h-8 w-8 items-center justify-center rounded-full"
+          style={{ background: `${tracker.color}1E` }}
         >
-          <TrackerIcon name={tracker.icon} size={15} color={tracker.color} />
+          <TrackerIcon name={tracker.icon} size={17} color={tracker.color} />
         </span>
-        <span className="text-sm font-semibold">{tracker.name}</span>
+        <span className="text-[15px] font-semibold">{tracker.name}</span>
       </div>
       <Control tracker={tracker} value={value} onChange={onChange} disabled={disabled} />
     </div>
@@ -49,7 +49,7 @@ function Control({
   switch (tracker.input_type) {
     case 'boolean':
       return (
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <Chip
             active={value === true}
             color={tracker.color}
@@ -63,7 +63,7 @@ function Control({
 
     case 'choice':
       return (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           {(cfg.options ?? []).map((o) => (
             <Chip
               key={o.value}
@@ -81,7 +81,7 @@ function Control({
     case 'multichoice': {
       const selected = Array.isArray(value) ? value : []
       return (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           {(cfg.options ?? []).map((o) => {
             const active = selected.includes(o.value)
             return (
@@ -116,8 +116,10 @@ function Control({
                 type="button"
                 disabled={disabled}
                 onClick={() => onChange(value === n ? null : n)}
-                className={`h-9 flex-1 rounded-xl text-sm font-semibold transition-colors ${
-                  typeof value === 'number' && value >= n ? 'text-white' : 'bg-blush text-plum-soft'
+                className={`h-11 flex-1 rounded-full text-[15px] font-semibold transition-colors ${
+                  typeof value === 'number' && value >= n
+                    ? 'text-white'
+                    : 'border border-line bg-white text-plum-soft'
                 }`}
                 style={typeof value === 'number' && value >= n ? { background: tracker.color } : undefined}
               >
@@ -126,7 +128,7 @@ function Control({
             ))}
           </div>
           {(cfg.min_label || cfg.max_label) && (
-            <div className="mt-1 flex justify-between text-[10px] text-plum-soft">
+            <div className="mt-1.5 flex justify-between text-[11px] text-plum-soft">
               <span>{cfg.min_label}</span>
               <span>{cfg.max_label}</span>
             </div>
@@ -161,8 +163,8 @@ function Chip({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-        active ? 'text-white' : 'bg-blush text-plum'
+      className={`flex h-12 items-center rounded-full px-5 text-[15px] font-medium transition-colors ${
+        active ? 'border border-transparent text-white' : 'border border-line bg-white text-plum hover:bg-cream'
       }`}
       style={active ? { background: color } : undefined}
     >
@@ -190,18 +192,18 @@ function NumberControl({
       <button
         type="button"
         disabled={disabled}
-        className="h-9 w-9 rounded-xl bg-blush text-lg font-bold"
+        className="h-11 w-11 rounded-full border border-line bg-white text-lg font-bold"
         onClick={() => onChange(n === null ? 0 : Math.max(0, +(n - 0.5).toFixed(1)) || null)}
       >
         −
       </button>
-      <span className="min-w-16 text-center text-lg font-bold" style={{ color: n !== null ? color : '#8A6B7D' }}>
+      <span className="min-w-16 text-center font-display text-xl" style={{ color: n !== null ? color : '#8A6B7D' }}>
         {n !== null ? `${n}${unit ? ` ${unit}` : ''}` : '—'}
       </span>
       <button
         type="button"
         disabled={disabled}
-        className="h-9 w-9 rounded-xl bg-blush text-lg font-bold"
+        className="h-11 w-11 rounded-full border border-line bg-white text-lg font-bold"
         onClick={() => onChange(n === null ? 1 : +(n + 0.5).toFixed(1))}
       >
         +
@@ -234,7 +236,7 @@ function TextControl({
       }}
       placeholder="Write anything…"
       rows={2}
-      className="w-full resize-none rounded-xl bg-blush p-3 text-sm outline-none placeholder:text-plum-soft/60"
+      className="w-full resize-none rounded-2xl bg-line-soft p-3.5 text-sm outline-none placeholder:text-plum-soft/60"
     />
   )
 }

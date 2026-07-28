@@ -1,19 +1,19 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { MSymbol } from './TrackerIcon'
 
 export function PageHeader({ title, backTo = '/settings' }: { title: string; backTo?: string }) {
   const navigate = useNavigate()
   return (
-    <div className="mb-4 flex items-center gap-1">
+    <div className="mb-5 flex items-center gap-1">
       <button
         type="button"
         onClick={() => navigate(backTo)}
-        className="-ml-2 rounded-full p-2 text-plum-soft hover:bg-blush"
+        className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-ink-soft hover:bg-blush"
         aria-label="Back"
       >
-        <ChevronLeft size={22} />
+        <MSymbol name="arrow_back" size={22} />
       </button>
-      <h1 className="text-xl font-bold">{title}</h1>
+      <h1 className="font-display text-[28px] font-medium tracking-[-.01em]">{title}</h1>
     </div>
   )
 }

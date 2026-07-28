@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Droplets } from 'lucide-react'
+import { MSymbol } from '../components/TrackerIcon'
 import { authRedirectUrl, supabase } from '../lib/supabase'
 
 export function Login() {
@@ -38,10 +38,10 @@ export function Login() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6">
-      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-rose shadow-lg shadow-rose/30">
-        <Droplets size={32} className="text-cream" />
+      <div className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-rose">
+        <MSymbol name="water_drop" size={34} fill color="#FFF8F4" />
       </div>
-      <h1 className="mt-4 text-2xl font-bold">Bloom</h1>
+      <h1 className="mt-4 font-display text-[28px] font-medium">Bloom</h1>
       <p className="mt-1 text-sm text-plum-soft">Cycle tracking, together.</p>
 
       {sent ? (

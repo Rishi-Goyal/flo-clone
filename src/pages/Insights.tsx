@@ -4,10 +4,15 @@ import { useAllEntries, useTrackers } from '../hooks/useData'
 import { computeCycleSummary } from '../lib/cycle'
 import { computePatternInsights, computePhaseAverages } from '../lib/insights'
 import { todayIso } from '../lib/supabase'
-import { StatCard } from '../components/StatCard'
-import { TrackerIcon } from '../components/TrackerIcon'
+import { TrackerIcon, MSymbol } from '../components/TrackerIcon'
 import { PHASE_UI } from '../components/phaseUi'
-import { Sparkles } from 'lucide-react'
+
+const PATTERN_TINTS = [
+  { bg: '#FBE9EE', meta: '#8F2B4C' },
+  { bg: '#FBEED8', meta: '#8A5C12' },
+  { bg: '#EFE8F8', meta: '#6E51A0' },
+  { bg: '#DDF0EA', meta: '#2F6D59' },
+]
 
 export function Insights() {
   const { session } = useAuth()
@@ -25,7 +30,6 @@ export function Insights() {
       .filter((e) => e.tracker_id !== flowTracker?.id)
       .map((e) => ({ trackerId: e.tracker_id, date: e.date, value: e.value }))
     const patterns = computePatternInsights(summary.periods, nonFlow)
-    // per-phase averages for numeric trackers
     const numericTrackers = (trackers.data ?? []).filter(
       (t) => (t.input_type === 'scale' || t.input_type === 'number') && t.is_active,
     )
@@ -43,115 +47,100 @@ export function Insights() {
 
   const { summary, patterns, phaseAverages } = data
   const trackerById = new Map((trackers.data ?? []).map((t) => [t.id, t]))
+  const cycleCount = summary.validCycleLengths.length
 
   return (
-    <div className="mx-auto max-w-md px-4 pb-24 pt-6">
-      <h1 className="mb-4 text-xl font-bold">Insights</h1>
+    <div className="mx-auto max-w-md px-5 pb-32 pt-5 md:pb-10">
+      <h1 className="font-display text-[28px] font-medium tracking-[-.01em]">Your patterns</h1>
+      <p className="mb-5 mt-1.5 text-[15px] text-ink-mute">
+        {cycleCount >= 2
+          ? `${cycleCount} cycles in — here's what keeps showing up.`
+          : 'Patterns appear after a few logged cycles.'}
+      </p>
 
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="Avg cycle"
-          value={summary.validCycleLengths.length ? `${Math.round(summary.avgCycleLength)} days` : '—'}
-          sub={summary.validCycleLengths.length ? `from ${summary.validCycleLengths.length} cycles` : 'need 2+ periods'}
-        />
-        <StatCard
-          label="Avg period"
-          value={summary.periods.length ? `${Math.round(summary.avgPeriodLength)} days` : '—'}
-        />
-        <StatCard
-          label="Variability"
-          value={summary.cycleStddev !== null ? `±${summary.cycleStddev.toFixed(1)} days` : '—'}
-          sub={summary.cycleStddev === null ? 'need 3+ cycles' : undefined}
-        />
-        <StatCard
-          label="Confidence"
-          value={summary.confidence[0].toUpperCase() + summary.confidence.slice(1)}
-          sub="prediction quality"
-        />
-      </div>
-
-      {/* cycle length history */}
-      {summary.validCycleLengths.length > 0 && (
-        <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-plum-soft">
-            Recent cycle lengths
-          </p>
-          <div className="mt-3 flex h-28 items-end gap-2">
-            {summary.validCycleLengths.map((len, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <span className="text-[10px] font-semibold text-plum-soft">{len}</span>
-                <div
-                  className="w-full rounded-t-lg bg-rose/80"
-                  style={{ height: `${(len / 45) * 100}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <p className="mt-1 text-center text-[10px] text-plum-soft">oldest → newest (days)</p>
-        </div>
-      )}
-
-      {/* pattern insights */}
+      {/* pattern cards */}
       {patterns.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h2 className="px-1 text-xs font-bold uppercase tracking-wide text-plum-soft">Patterns</h2>
-          {patterns.map((p) => {
+        <div className="space-y-3">
+          {patterns.map((p, i) => {
             const t = trackerById.get(p.trackerId)
             if (!t) return null
+            const tint = PATTERN_TINTS[i % PATTERN_TINTS.length]
             return (
-              <div key={p.trackerId} className="flex items-start gap-3 rounded-2xl bg-white p-4 shadow-sm">
-                <span
-                  className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: `${t.color}22` }}
-                >
-                  <TrackerIcon name={t.icon} size={16} color={t.color} />
-                </span>
-                <div>
-                  <p className="text-sm font-medium leading-relaxed">{p.text(t.name)}</p>
-                  <p className="mt-0.5 text-[11px] text-plum-soft">
-                    seen in {p.cyclesWithSignal} of {p.totalCycles} cycles
-                  </p>
-                </div>
+              <div key={p.trackerId} className="rounded-[28px] p-6" style={{ background: tint.bg }}>
+                <p className="font-display text-[22px] leading-normal text-plum">{p.text(t.name)}</p>
+                <p className="mt-3 flex items-center gap-2 text-sm font-medium" style={{ color: tint.meta }}>
+                  <TrackerIcon name={t.icon} size={16} color={tint.meta} />
+                  Seen in {p.cyclesWithSignal} of your last {p.totalCycles} cycles
+                </p>
               </div>
             )
           })}
         </div>
       )}
 
-      {/* phase averages */}
-      {phaseAverages.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h2 className="px-1 text-xs font-bold uppercase tracking-wide text-plum-soft">By phase</h2>
-          {phaseAverages.map(({ tracker, averages }) => (
-            <div key={tracker.id} className="rounded-2xl bg-white p-4 shadow-sm">
-              <div className="mb-2 flex items-center gap-2">
-                <TrackerIcon name={tracker.icon} size={15} color={tracker.color} />
-                <span className="text-sm font-semibold">{tracker.name}</span>
-                {tracker.config.unit && <span className="text-xs text-plum-soft">({tracker.config.unit})</span>}
-              </div>
-              <div className="flex gap-2">
-                {averages.map((a) => (
+      {/* cycle length */}
+      {cycleCount > 0 && (
+        <div className="mt-5 rounded-[28px] border border-line bg-white p-6">
+          <p className="text-[13px] font-bold uppercase tracking-[.06em] text-plum-soft">Cycle length</p>
+          <div className="mt-1.5 flex items-baseline gap-2.5">
+            <span className="font-display text-[44px] leading-none">{Math.round(summary.avgCycleLength)}</span>
+            <span className="text-base text-ink-mute">
+              days on average
+              {summary.cycleStddev !== null && summary.cycleStddev >= 0.5
+                ? `, give or take ${Math.round(summary.cycleStddev)}`
+                : ''}
+            </span>
+          </div>
+          <div className="mt-5 flex h-24 items-end gap-2.5">
+            {summary.validCycleLengths.map((len, i) => {
+              const last = i === summary.validCycleLengths.length - 1
+              return (
+                <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
                   <div
-                    key={a.phase}
-                    className="flex-1 rounded-xl p-2 text-center"
-                    style={{ background: PHASE_UI[a.phase].soft }}
-                  >
-                    <p className="text-base font-bold" style={{ color: PHASE_UI[a.phase].text }}>
-                      {a.average.toFixed(1)}
-                    </p>
-                    <p className="text-[10px] font-medium text-plum-soft">{PHASE_UI[a.phase].label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+                    className="w-full rounded-lg"
+                    style={{ height: `${(len / 45) * 100}%`, background: last ? '#E4557F' : '#F6D3DD' }}
+                  />
+                  <span className={`text-xs ${last ? 'font-semibold text-rose-deep' : 'text-plum-soft'}`}>{len}</span>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
+      {/* per-phase averages */}
+      {phaseAverages.map(({ tracker, averages }) => {
+        const max = Math.max(tracker.config.max ?? 5, ...averages.map((a) => a.average))
+        return (
+          <div key={tracker.id} className="mt-5 rounded-[28px] border border-line bg-white p-6">
+            <p className="mb-4 text-[13px] font-bold uppercase tracking-[.06em] text-plum-soft">
+              {tracker.name} by phase{tracker.config.unit ? ` (${tracker.config.unit})` : ''}
+            </p>
+            <div className="flex flex-col gap-3.5">
+              {averages.map((a) => (
+                <div key={a.phase} className="flex items-center gap-3.5">
+                  <span className="w-[76px] text-sm text-ink-mute">{PHASE_UI[a.phase].label}</span>
+                  <div className="h-3 flex-1 rounded-full bg-line-soft">
+                    <div
+                      className="h-3 rounded-full"
+                      style={{
+                        width: `${Math.min(100, (a.average / max) * 100)}%`,
+                        background: PHASE_UI[a.phase].color,
+                      }}
+                    />
+                  </div>
+                  <span className="w-8 text-right text-sm font-semibold">{a.average.toFixed(1)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+
       {patterns.length === 0 && summary.periods.length < 4 && (
-        <div className="mt-4 flex items-start gap-3 rounded-2xl bg-blush p-4">
-          <Sparkles size={18} className="mt-0.5 shrink-0 text-rose" />
-          <p className="text-xs leading-relaxed text-plum-soft">
+        <div className="mt-4 flex items-start gap-3.5 rounded-[28px] bg-blush p-5">
+          <MSymbol name="auto_awesome" size={20} color="#C43D68" className="mt-0.5 shrink-0" />
+          <p className="text-sm leading-relaxed text-ink-mute">
             Pattern insights appear after 3–4 logged cycles — keep logging symptoms and they'll show up
             here automatically.
           </p>

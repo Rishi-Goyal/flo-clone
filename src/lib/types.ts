@@ -89,6 +89,16 @@ export interface CycleStatsRow {
   updated_at: string
 }
 
+export interface PartnerNote {
+  id: string
+  link_id: string
+  sender_id: string
+  recipient_id: string
+  body: string
+  created_at: string
+  read_at: string | null
+}
+
 export interface Reminder {
   id: string
   user_id: string

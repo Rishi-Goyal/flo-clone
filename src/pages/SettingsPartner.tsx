@@ -1,31 +1,19 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, Copy, HeartHandshake } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
-import { useOwnerLink } from '../hooks/useData'
+import { useLinkedProfileName, useOwnerLink } from '../hooks/useData'
 import { supabase } from '../lib/supabase'
 import { PageHeader } from '../components/PageHeader'
+import { MSymbol } from '../components/TrackerIcon'
 
 export function SettingsPartner() {
   const { session } = useAuth()
   const userId = session?.user.id
   const qc = useQueryClient()
   const link = useOwnerLink(userId)
+  const partnerName = useLinkedProfileName(link.data?.partner_id)
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
-
-  const partnerProfile = useQuery({
-    queryKey: ['partner-profile', link.data?.partner_id],
-    enabled: !!link.data?.partner_id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', link.data!.partner_id!)
-        .maybeSingle()
-      return data
-    },
-  })
 
   async function createInvite() {
     setBusy(true)
@@ -60,14 +48,14 @@ export function SettingsPartner() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 pb-24 pt-6">
+    <div className="mx-auto max-w-md px-5 pb-32 pt-5 md:pb-10">
       <PageHeader title="Partner" />
 
       {link.isLoading ? null : !link.data ? (
-        <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
-          <HeartHandshake size={32} className="mx-auto text-rose" />
-          <p className="mt-2 text-sm font-semibold">Invite your partner</p>
-          <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-plum-soft">
+        <div className="rounded-[28px] border border-line bg-white p-6 text-center">
+          <MSymbol name="favorite" size={32} fill color="#E4557F" />
+          <p className="mt-2 font-display text-lg font-medium">Invite your partner</p>
+          <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-ink-mute">
             They'll get their own account with a dashboard showing your cycle phase and daily tips on how
             to support you. You control exactly what they can see.
           </p>
@@ -75,55 +63,55 @@ export function SettingsPartner() {
             type="button"
             disabled={busy}
             onClick={() => void createInvite()}
-            className="mt-4 w-full rounded-2xl bg-rose py-3 text-sm font-semibold text-white shadow-lg shadow-rose/30 disabled:opacity-50"
+            className="mt-5 h-14 w-full rounded-full bg-rose font-display text-base font-semibold text-white disabled:opacity-50"
           >
             Generate invite code
           </button>
         </div>
       ) : link.data.status === 'pending' ? (
-        <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
-          <p className="text-sm font-semibold">Share this code with your partner</p>
-          <p className="mt-3 rounded-2xl bg-blush py-4 font-mono text-2xl font-bold tracking-[0.25em]">
+        <div className="rounded-[28px] border border-line bg-white p-6 text-center">
+          <p className="text-[15px] font-semibold">Share this code with your partner</p>
+          <p className="mt-3 rounded-3xl bg-blush py-4 font-mono text-2xl font-bold tracking-[0.25em] text-rose-deep">
             {link.data.invite_code}
           </p>
           <button
             type="button"
             onClick={() => void copyInvite()}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-rose py-3 text-sm font-semibold text-white shadow-lg shadow-rose/30"
+            className="mt-4 flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-rose font-display text-base font-semibold text-white"
           >
-            {copied ? <Check size={16} /> : <Copy size={16} />}
+            <MSymbol name={copied ? 'check' : 'content_copy'} size={20} />
             {copied ? 'Copied!' : 'Share invite link'}
           </button>
-          <p className="mt-2 text-[11px] text-plum-soft">
+          <p className="mt-2.5 text-[13px] text-plum-soft">
             They can enter the code at sign-up, or open the link directly.
           </p>
-          <button type="button" onClick={() => void revoke()} className="mt-3 text-xs font-medium text-rose-dark">
+          <button type="button" onClick={() => void revoke()} className="mt-4 text-sm font-medium text-rose-deep">
             Cancel invite
           </button>
         </div>
       ) : (
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-fertile-soft">
-              <HeartHandshake size={22} className="text-fertile" />
+        <div className="rounded-[28px] border border-line bg-white p-6">
+          <div className="flex items-center gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-fertile-soft">
+              <MSymbol name="favorite" size={22} fill color="#2F6D59" />
             </span>
             <div>
-              <p className="text-sm font-semibold">
-                Linked with {partnerProfile.data?.display_name ?? 'your partner'}
+              <p className="text-[15px] font-semibold">
+                Linked with {partnerName.data ?? 'your partner'}
               </p>
-              <p className="text-xs text-plum-soft">
+              <p className="text-sm text-plum-soft">
                 since {link.data.accepted_at ? new Date(link.data.accepted_at).toLocaleDateString() : '—'}
               </p>
             </div>
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-plum-soft">
+          <p className="mt-4 text-sm leading-relaxed text-ink-mute">
             Manage what they can see in Settings → Sharing.
           </p>
           <button
             type="button"
             disabled={busy}
             onClick={() => void revoke()}
-            className="mt-4 w-full rounded-2xl border border-blush-deep py-3 text-sm font-semibold text-rose-dark"
+            className="mt-5 h-[52px] w-full rounded-full border border-line text-[15px] font-semibold text-rose-deep hover:bg-blush"
           >
             Unlink partner
           </button>

@@ -79,10 +79,10 @@ function OnboardingRoute() {
 
 function TrackerShell() {
   return (
-    <>
+    <div className="md:pl-[88px]">
       <Outlet />
       <BottomNav />
-    </>
+    </div>
   )
 }
 
