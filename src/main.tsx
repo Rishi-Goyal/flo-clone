@@ -1,13 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import { AuthProvider } from './hooks/useAuth'
 import { isNative, supabase } from './lib/supabase'
 import './index.css'
 
-registerSW({ immediate: true })
+// Service-worker registration lives in UpdateBanner (prompt-style updates).
 
 // Android: the magic link deep-links back into the app with ?code=…
 if (isNative) {

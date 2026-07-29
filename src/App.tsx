@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import { useAuth } from './hooks/useAuth'
 import { isSupabaseConfigured } from './lib/supabase'
 import { BottomNav } from './components/BottomNav'
+import { UpdateBanner } from './components/UpdateBanner'
 import { Login } from './pages/Login'
 import { Onboarding } from './pages/Onboarding'
 import { Join } from './pages/Join'
@@ -91,6 +92,7 @@ export default function App() {
   if (!isSupabaseConfigured) return <SetupNeeded />
   return (
     <BrowserRouter>
+      <UpdateBanner />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginRoute />} />
