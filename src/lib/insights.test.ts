@@ -46,6 +46,15 @@ describe('computePatternInsights', () => {
     expect(computePatternInsights(periods, noisy)).toHaveLength(0)
   })
 
+  it('ignores trackers logged from early in the cycle (daily-style logging)', () => {
+    const daily: EntryLite[] = periods.slice(0, 4).map((p) => ({
+      trackerId: 'mood',
+      date: addDaysIso(p.start, 1), // earliest log ~1 day after each cycle starts
+      value: ['happy'],
+    }))
+    expect(computePatternInsights(periods, daily)).toHaveLength(0)
+  })
+
   it('returns nothing with fewer than 2 periods', () => {
     const single = derivePeriods(['2026-01-01', '2026-01-02'])
     expect(computePatternInsights(single, [])).toHaveLength(0)

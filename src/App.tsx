@@ -14,6 +14,7 @@ import { SettingsSharing } from './pages/SettingsSharing'
 import { SettingsPartner } from './pages/SettingsPartner'
 import { SettingsReminders } from './pages/SettingsReminders'
 import { PartnerDashboard } from './pages/PartnerDashboard'
+import { DevLogin } from './pages/DevLogin'
 
 function Splash() {
   return (
@@ -95,6 +96,7 @@ export default function App() {
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/onboarding" element={<OnboardingRoute />} />
         <Route path="/join/:code" element={<Join />} />
+        {import.meta.env.DEV && <Route path="/dev-login" element={<DevLogin />} />}
 
         <Route element={<RequireRole role="tracker" />}>
           <Route element={<TrackerShell />}>

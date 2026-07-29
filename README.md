@@ -100,6 +100,19 @@ npm run build     # type-check + production build
 npm run preview   # serve the production build locally
 ```
 
+### Test accounts (dev login)
+
+With `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`:
+
+```bash
+npm run dev:login
+```
+
+creates/refreshes two linked fixtures — `tracker@bloom.test` (seeded with ~5 cycles of data) and
+`partner@bloom.test` — and prints single-use sign-in URLs handled by the dev-only `/dev-login`
+route. Open a URL to jump straight into that role, no email round-trip. The route only exists in
+`npm run dev` builds; add `--reseed` to regenerate log data.
+
 ### Verifying the privacy model (RLS)
 
 Sign in as the partner in an incognito window and check that:

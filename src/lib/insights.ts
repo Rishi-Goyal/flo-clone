@@ -63,6 +63,9 @@ export function computePatternInsights(periods: Period[], entries: EntryLite[]):
     if (populationStddev(offsets) > 1.5) continue
 
     const med = Math.round(median(offsets))
+    // Trackers logged from early in the cycle (e.g. daily mood/sleep) aren't a
+    // pre-period pattern — only report symptoms clustering near the period.
+    if (med < -10) continue
     insights.push({
       trackerId,
       medianOffsetDays: med,
