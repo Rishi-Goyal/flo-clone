@@ -4,12 +4,23 @@ import { format, parseISO } from 'date-fns'
 import { useAuth } from '../hooks/useAuth'
 import { useLinkedProfileName, usePartnerLink, useSendNote } from '../hooks/useData'
 import { supabase, todayIso } from '../lib/supabase'
-import { liveFromRow, PHASE_EXPLAIN } from '../lib/statsRow'
+import { PHASE_EXPLAIN } from '../lib/statsRow'
 import { pickTip } from '../lib/tips'
 import { MSymbol, TrackerIcon } from '../components/TrackerIcon'
 import { PHASE_UI } from '../components/phaseUi'
 import { addDaysIso } from '../lib/cycle'
-import type { CycleStatsRow, LogEntry, Tracker } from '../lib/types'
+import type { LogEntry, Phase, Tracker } from '../lib/types'
+
+/** Flag-filtered stats from the get_partner_stats() RPC (see migration 003). */
+interface PartnerStats {
+  phase: Phase | null
+  cycle_day?: number
+  confidence?: string | null
+  days_late?: number
+  days_until?: number
+  window_days?: number
+  predicted_next_start?: string
+}
 
 export function PartnerDashboard() {
   const { session, signOut } = useAuth()
@@ -26,9 +37,10 @@ export function PartnerDashboard() {
     queryKey: ['owner-stats', ownerId],
     enabled: !!ownerId && !!link.data?.share_phase,
     queryFn: async () => {
-      const { data, error } = await supabase.from('cycle_stats').select('*').eq('user_id', ownerId!).maybeSingle()
+      // RPC filters fields by the owner's sharing flags in the database
+      const { data, error } = await supabase.rpc('get_partner_stats')
       if (error) throw error
-      return (data as CycleStatsRow) ?? null
+      return (data as PartnerStats | null) ?? null
     },
   })
 
@@ -58,13 +70,10 @@ export function PartnerDashboard() {
   // realtime: refresh when the owner logs flow or flips sharing switches
   useEffect(() => {
     if (!ownerId) return
+    // cycle_stats is no longer partner-readable (migration 003); its writes
+    // "ping" the partner_links row instead, which we subscribe to below.
     const channel = supabase
       .channel(`partner-live-${ownerId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'cycle_stats', filter: `user_id=eq.${ownerId}` },
-        () => void qc.invalidateQueries({ queryKey: ['owner-stats', ownerId] }),
-      )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'partner_links', filter: `owner_id=eq.${ownerId}` },
@@ -86,23 +95,36 @@ export function PartnerDashboard() {
     }
   }, [ownerId, qc, userId])
 
-  const live = useMemo(() => (stats.data ? liveFromRow(stats.data, today) : null), [stats.data, today])
+  const live = stats.data && stats.data.phase ? stats.data : null
   const tip = useMemo(
-    () => (live && ownerId ? pickTip('partner', live, today, ownerId) : null),
+    () =>
+      live && ownerId
+        ? pickTip(
+            'partner',
+            {
+              currentPhase: live.phase,
+              daysUntilPeriod: live.days_until ?? null,
+              daysLate: live.days_late ?? 0,
+            },
+            today,
+            ownerId,
+          )
+        : null,
     [live, ownerId, today],
   )
 
   const name = ownerName.data ?? 'Your partner'
-  const ui = live?.currentPhase ? PHASE_UI[live.currentPhase] : null
+  const ui = live?.phase ? PHASE_UI[live.phase] : null
 
   function expectedLine(): string | null {
-    if (!link.data?.share_predictions || !live?.predictedNextStart || live.daysUntilPeriod === null) return null
-    if (live.daysLate > 0)
-      return `Period is ${live.daysLate} day${live.daysLate === 1 ? '' : 's'} later than predicted`
-    const n = live.daysUntilPeriod
-    const w = live.predictionWindowDays
-    if (link.data.share_period_dates)
-      return `Period expected around ${format(parseISO(live.predictedNextStart), 'd MMM')}`
+    if (!live) return null
+    if ((live.days_late ?? 0) > 0)
+      return `Period is ${live.days_late} day${live.days_late === 1 ? '' : 's'} later than predicted`
+    if (live.days_until === undefined) return null // predictions not shared
+    if (live.predicted_next_start)
+      return `Period expected around ${format(parseISO(live.predicted_next_start), 'd MMM')}`
+    const n = live.days_until
+    const w = live.window_days ?? 4
     return live.confidence === 'high'
       ? `Period expected in ~${n} day${n === 1 ? '' : 's'}`
       : `Period expected in ${Math.max(0, n - w)}–${n + w} days`
@@ -186,17 +208,17 @@ export function PartnerDashboard() {
           <>
             {/* phase card */}
             <div className="flex flex-col items-center gap-4 rounded-[28px] border border-mint-line bg-white px-6 py-7">
-              {live?.currentPhase && ui ? (
+              {live?.phase && ui ? (
                 <>
                   <span
                     className="flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-semibold"
                     style={{ background: ui.soft, color: ui.text }}
                   >
                     <i className="h-2 w-2 rounded-full" style={{ background: ui.color }} />
-                    {ui.label} phase · day {live.cycleDay}
+                    {ui.label} phase · day {live.cycle_day}
                   </span>
                   <p className="max-w-[20ch] text-center font-display text-[24px] font-normal leading-snug tracking-[-.01em]">
-                    {PHASE_EXPLAIN[live.currentPhase]}
+                    {PHASE_EXPLAIN[live.phase]}
                   </p>
                 </>
               ) : (
