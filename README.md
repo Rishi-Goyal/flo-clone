@@ -92,6 +92,29 @@ cd android && ./gradlew assembleDebug   # → android/app/build/outputs/apk/debu
 Client config for these builds comes from `.env.production` (public URL + publishable key — safe to
 commit; everything is enforced by RLS).
 
+## Note notifications (FCM)
+
+When one partner sends a note, the other gets a native Android push — pipeline:
+`partner_notes INSERT → Database Webhook → notify-note Edge Function → FCM`.
+
+One-time setup:
+
+1. **Firebase**: create a project at console.firebase.google.com, add an Android app with
+   package `com.rishi.bloom`, download `google-services.json` into `android/app/`
+   (safe to commit), and rebuild the APK.
+2. **Service account**: Firebase → Project settings → Service accounts → *Generate new
+   private key* (JSON).
+3. **Supabase**: run `supabase/migrations/004_push_tokens.sql`; deploy
+   `supabase/functions/notify-note` (dashboard → Edge Functions, **Verify JWT off**);
+   set secrets `FCM_SERVICE_ACCOUNT` (the JSON from step 2) and `NOTE_WEBHOOK_SECRET`
+   (any random string).
+4. **Webhook**: Database → Webhooks → on `partner_notes` INSERT → HTTP POST to the
+   `notify-note` function URL with header `x-note-secret: <NOTE_WEBHOOK_SECRET>`.
+
+The app registers the device token on sign-in (permission prompt on first launch) and
+cleans up stale tokens automatically. Without Firebase config the app runs fine — push
+registration just no-ops.
+
 ## Development
 
 ```bash

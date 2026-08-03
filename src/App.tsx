@@ -16,6 +16,7 @@ import { SettingsPartner } from './pages/SettingsPartner'
 import { SettingsReminders } from './pages/SettingsReminders'
 import { PartnerDashboard } from './pages/PartnerDashboard'
 import { DevLogin } from './pages/DevLogin'
+import { usePushRegistration } from './hooks/usePush'
 
 function Splash() {
   return (
@@ -88,11 +89,18 @@ function TrackerShell() {
   )
 }
 
+function PushSetup() {
+  const { session } = useAuth()
+  usePushRegistration(session?.user.id)
+  return null
+}
+
 export default function App() {
   if (!isSupabaseConfigured) return <SetupNeeded />
   return (
     <BrowserRouter>
       <UpdateBanner />
+      <PushSetup />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginRoute />} />
