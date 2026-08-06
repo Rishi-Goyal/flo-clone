@@ -92,28 +92,37 @@ cd android && ./gradlew assembleDebug   # → android/app/build/outputs/apk/debu
 Client config for these builds comes from `.env.production` (public URL + publishable key — safe to
 commit; everything is enforced by RLS).
 
-## Note notifications (FCM)
+## Note notifications (FCM) — live
 
-When one partner sends a note, the other gets a native Android push — pipeline:
-`partner_notes INSERT → Database Webhook → notify-note Edge Function → FCM`.
+When one partner sends a note, the other gets a native Android push, even with the app
+closed. Pipeline:
 
-One-time setup:
+```
+partner_notes INSERT → trigger (pg_net) → notify-note Edge Function → FCM → device
+```
 
-1. **Firebase**: create a project at console.firebase.google.com, add an Android app with
-   package `com.rishi.bloom`, download `google-services.json` into `android/app/`
-   (safe to commit), and rebuild the APK.
-2. **Service account**: Firebase → Project settings → Service accounts → *Generate new
-   private key* (JSON).
-3. **Supabase**: run `supabase/migrations/004_push_tokens.sql`; deploy
-   `supabase/functions/notify-note` (dashboard → Edge Functions, **Verify JWT off**);
-   set secrets `FCM_SERVICE_ACCOUNT` (the JSON from step 2) and `NOTE_WEBHOOK_SECRET`
-   (any random string).
-4. **Webhook**: Database → Webhooks → on `partner_notes` INSERT → HTTP POST to the
-   `notify-note` function URL with header `x-note-secret: <NOTE_WEBHOOK_SECRET>`.
+Already provisioned: Firebase project `bloom-6dd73` (Android app `com.rishi.bloom`,
+`android/app/google-services.json` committed — it's client config, not a secret), the
+`push_tokens` table, the deployed `notify-note` function with its `FCM_SERVICE_ACCOUNT`
+and `NOTE_WEBHOOK_SECRET` secrets, and the `partner_notes_notify` trigger.
 
-The app registers the device token on sign-in (permission prompt on first launch) and
-cleans up stale tokens automatically. Without Firebase config the app runs fine — push
-registration just no-ops.
+The app registers its device token after sign-in (Android asks permission on first
+launch) and the function deletes tokens FCM reports as dead. On web, push registration
+no-ops — notes still appear as an in-app banner.
+
+### Managing Supabase from the CLI
+
+The dashboard's SQL editor is awkward to automate, so migrations and functions go through
+the CLI/Management API using a personal access token in `.env.local`
+(`SUPABASE_ACCESS_TOKEN`, created at Account → Access Tokens; revoke anytime):
+
+```bash
+npx supabase functions deploy notify-note --no-verify-jwt --project-ref aqwukyaeiirwcajqdlda
+npx supabase secrets set --env-file <file> --project-ref aqwukyaeiirwcajqdlda
+```
+
+Migrations in `supabase/migrations/` are applied by POSTing the SQL to
+`https://api.supabase.com/v1/projects/<ref>/database/query` with that token.
 
 ## Development
 

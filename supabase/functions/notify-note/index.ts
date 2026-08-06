@@ -108,12 +108,23 @@ Deno.serve(async (req) => {
         }),
       },
     )
-    if (res.status === 404 || res.status === 410) {
-      // token no longer valid — clean it up
+    if (res.ok) {
+      results.push(`${token.slice(0, 12)}: sent`)
+      continue
+    }
+    // Drop tokens FCM says are dead (UNREGISTERED) or unusable (malformed).
+    // Anything else is likely our bug — keep the token and surface the error.
+    const body = await res.text()
+    const dead =
+      res.status === 404 ||
+      res.status === 410 ||
+      body.includes('UNREGISTERED') ||
+      body.includes('INVALID_ARGUMENT')
+    if (dead) {
       await supabase.from('push_tokens').delete().eq('token', token)
-      results.push(`${token.slice(0, 12)}: stale, removed`)
+      results.push(`${token.slice(0, 12)}: ${res.status} dead, removed`)
     } else {
-      results.push(`${token.slice(0, 12)}: ${res.status}`)
+      results.push(`${token.slice(0, 12)}: ${res.status} ${body.slice(0, 120)}`)
     }
   }
 
