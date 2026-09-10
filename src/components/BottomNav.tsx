@@ -34,7 +34,7 @@ export function BottomNav() {
   return (
     <>
       {/* mobile bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-nav-line bg-nav pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-nav-line bg-nav pb-[var(--sab)] md:hidden">
         <div className="mx-auto flex max-w-md pt-3 pb-2">{tabs.map((t) => Item(t))}</div>
       </nav>
 

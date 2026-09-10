@@ -44,7 +44,7 @@ export function UpdateBanner() {
   if (!showWeb && !showApk) return null
 
   return (
-    <div className="sticky top-0 z-30 flex items-center gap-3 bg-plum px-4 py-2.5 text-white md:pl-[104px]">
+    <div className="sticky top-0 z-30 -mt-[var(--sat)] flex items-center gap-3 bg-plum px-4 pb-2.5 pt-[calc(0.625rem_+_var(--sat))] text-white md:pl-[104px]">
       <MSymbol name="system_update" size={20} className="shrink-0" />
       <p className="flex-1 text-sm font-medium">
         {showWeb ? 'A new version of Bloom is ready.' : `Update available — ${apk?.name ?? 'new build'}.`}
