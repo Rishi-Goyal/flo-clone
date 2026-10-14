@@ -33,8 +33,27 @@ project_status() {
     | sed -n 's/.*"status":"\([A-Z_]*\)".*/\1/p'
 }
 
+# Verify the auto-restore token on every healthy run, so an expired/revoked
+# token fails loudly now (GitHub emails) instead of silently at the next pause.
+check_token() {
+  if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
+    echo "::warning::No SUPABASE_ACCESS_TOKEN secret — auto-restore is disabled."
+    return 0
+  fi
+  local status
+  status=$(project_status)
+  if [ -z "$status" ]; then
+    echo "::error::SUPABASE_ACCESS_TOKEN is invalid or expired — auto-restore would fail. Create a new token at https://supabase.com/dashboard/account/tokens and update the repo secret."
+    return 1
+  fi
+  echo "auto-restore armed (management API sees project as $status)"
+}
+
 for attempt in 1 2 3; do
-  ping_db && exit 0
+  if ping_db; then
+    check_token
+    exit $?
+  fi
   sleep 20
 done
 
