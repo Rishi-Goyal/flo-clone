@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { useAuth } from '../hooks/useAuth'
@@ -17,6 +17,7 @@ import {
 import { computeCycleSummary, addDaysIso, type CycleSummary } from '../lib/cycle'
 import { pickTip } from '../lib/tips'
 import { todayIso } from '../lib/supabase'
+import { trackerSnapshot, updateWidget } from '../lib/widget'
 import { PhaseRing } from '../components/PhaseRing'
 import { TrackerInput } from '../components/TrackerInput'
 import { MSymbol, TrackerIcon } from '../components/TrackerIcon'
@@ -62,6 +63,11 @@ export function Today() {
       .map((e) => e.date)
     return computeCycleSummary(flowDates, today)
   }, [allEntries.data, flowTracker?.id, today])
+
+  // keep the home-screen widget in sync (only once real data has loaded)
+  useEffect(() => {
+    if (allEntries.isSuccess && trackers.isSuccess) updateWidget(trackerSnapshot(summary))
+  }, [summary, allEntries.isSuccess, trackers.isSuccess])
 
   const tip = useMemo(
     () => (userId ? pickTip('owner', summary, today, userId) : null),

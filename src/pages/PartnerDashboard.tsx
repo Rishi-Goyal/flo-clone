@@ -9,6 +9,7 @@ import { pickTip } from '../lib/tips'
 import { MSymbol, TrackerIcon } from '../components/TrackerIcon'
 import { PHASE_UI } from '../components/phaseUi'
 import { addDaysIso } from '../lib/cycle'
+import { updateWidget } from '../lib/widget'
 import type { LogEntry, Phase, Tracker } from '../lib/types'
 
 /** Flag-filtered stats from the get_partner_stats() RPC (see migration 003). */
@@ -115,6 +116,25 @@ export function PartnerDashboard() {
 
   const name = ownerName.data ?? 'Your partner'
   const ui = live?.phase ? PHASE_UI[live.phase] : null
+
+  // keep the home-screen widget in sync with what's shared
+  const sharingOff = link.isSuccess && (!link.data || !link.data.share_phase)
+  useEffect(() => {
+    if (sharingOff) {
+      updateWidget({ role: 'none' })
+    } else if (stats.isSuccess && live?.phase && live.cycle_day) {
+      updateWidget({
+        role: 'partner',
+        ownerName: ownerName.data ?? '',
+        phase: live.phase,
+        cycleDay: live.cycle_day,
+        asOf: today,
+        daysUntil: live.days_until,
+        windowDays: live.window_days,
+        confidence: live.confidence ?? undefined,
+      })
+    }
+  }, [sharingOff, stats.isSuccess, live, ownerName.data, today])
 
   function expectedLine(): string | null {
     if (!live) return null

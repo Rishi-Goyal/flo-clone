@@ -124,6 +124,30 @@ npx supabase secrets set --env-file <file> --project-ref aqwukyaeiirwcajqdlda
 Migrations in `supabase/migrations/` are applied by POSTing the SQL to
 `https://api.supabase.com/v1/projects/<ref>/database/query` with that token.
 
+## Home-screen widget (Android)
+
+Long-press the home screen → **Widgets** → **Bloom**. It shows the cycle day, phase and
+next-period countdown (for the partner: the shared phase/day of their partner), tinted by
+phase. The app hands the widget a small snapshot whenever Today / the partner dashboard
+loads; the widget recomputes day-relative values from the dates every 30 minutes, so it
+stays correct without opening the app. It never touches the network or credentials, and
+signing out blanks it.
+
+## Staying awake (free-tier pausing)
+
+Free Supabase projects pause after a week without "a few user requests to the database
+each day". `.github/workflows/keepalive.yml` runs **every 4 hours** and:
+
+1. calls `keepalive_ping()` (migration 005) — a real write to a one-row heartbeat table plus
+   reads of the real tables, as an API user;
+2. if the project is paused anyway, **restores it automatically** through the Management API
+   and waits until it's healthy (needs a `SUPABASE_ACCESS_TOKEN` repository secret — create a
+   token at supabase.com/dashboard/account/tokens);
+3. re-enables itself through the GitHub API, so GitHub's 60-days-of-inactivity rule can't
+   silently switch the schedule off.
+
+If it fails, GitHub emails the repo owner.
+
 ## Development
 
 ```bash

@@ -1,24 +1,38 @@
 name: Supabase keep-alive
 
-# Free Supabase projects pause after ~7 days of low database activity.
-# Daily app use normally prevents this, but this ping is insurance for
-# vacations/gaps: a real DB query every 3 days resets the inactivity timer.
-# (Note: GitHub disables cron workflows on repos with no activity for 60
-# days — pushing anything re-enables them.)
+# Free Supabase projects pause after a week without "a few user requests to
+# the database each day". A REST read every 3 days was NOT enough (paused 3x),
+# so this now writes a heartbeat 6x a day and self-heals: if the project is
+# paused anyway, it restores it via the Management API
+# (needs the SUPABASE_ACCESS_TOKEN repo secret).
 
 on:
   schedule:
-    - cron: '17 6 */3 * *'
+    - cron: '23 */4 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write   # lets the job re-enable itself (see last step)
+
 jobs:
-  ping:
+  keepalive:
     runs-on: ubuntu-latest
     steps:
-      - name: Query the database
-        run: |
-          curl -fsS \
-            -H "apikey: sb_publishable_qnayXwSoPUz0ozWeX1HkbQ_cTViyoAz" \
-            -H "Authorization: Bearer sb_publishable_qnayXwSoPUz0ozWeX1HkbQ_cTViyoAz" \
-            "https://aqwukyaeiirwcajqdlda.supabase.co/rest/v1/profiles?select=id&limit=1" \
-            > /dev/null && echo "Supabase is awake"
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Heartbeat (and auto-restore if paused)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: bash .github/scripts/keepalive.sh
+
+      # GitHub disables scheduled workflows after 60 days without repo
+      # activity. Re-enabling through the API resets that clock, so this
+      # workflow can never silently stop.
+      - name: Keep this workflow enabled
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/keepalive.yml/enable" && echo "workflow kept enabled"

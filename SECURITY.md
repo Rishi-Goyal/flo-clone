@@ -66,6 +66,15 @@ errors), flag flips propagate live, and the note-guard trigger rejects body edit
   client credential and safe by design; RLS is the boundary.
 - The **secret** key lives only in the gitignored `.env.local` (verified never
   committed across the full git history) and is used only by local dev scripts.
+- The keep-alive's `SUPABASE_ACCESS_TOKEN` is a GitHub **repository secret** (masked in
+  logs, unavailable to forked PRs). It can restore/manage the project, so if it ever leaks,
+  revoke it at supabase.com/dashboard/account/tokens.
+- `keepalive_ping()` is callable with the public key by design: it only bumps a one-row
+  heartbeat counter and returns its timestamp — no user data in or out, bounded storage.
+- The **home-screen widget** stores only a derived snapshot (dates/phase, partner's display
+  name) in app-private SharedPreferences, excluded from backups (`allowBackup=false`). It
+  makes no network calls and is blanked on sign-out. Note it is visible to anyone looking
+  at the unlocked home screen — remove the widget if that matters.
 
 ## Accepted risks and operator checklist
 

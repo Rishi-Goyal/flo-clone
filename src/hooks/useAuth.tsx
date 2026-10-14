@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { updateWidget } from '../lib/widget'
 import type { Profile } from '../lib/types'
 
 interface AuthState {
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile, session])
 
   const signOut = useCallback(async () => {
+    updateWidget({ role: 'none' }) // don't leave cycle info on the home screen
     await supabase.auth.signOut()
   }, [])
 
